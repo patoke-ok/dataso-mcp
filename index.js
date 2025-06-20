@@ -7,7 +7,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 8080;
 
 // ✅ Usa la variable de entorno, o una fija si está vacía
-const apiKey = process.env.API_FOOTBALL_KEY || 'TU_API_KEY_AQUI';
+const apiKey = process.env.API_FOOTBALL_KEY || '7e3c9726a6176020df02c1e4f539e375';
 
 console.log('🔑 Usando API Key:', apiKey);
 
