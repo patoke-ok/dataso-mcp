@@ -7,19 +7,18 @@ app.use(express.json());
 
 app.post('/api/invoke', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
     const response = await axios.get(
-      `https://api-football-v1.p.rapidapi.com/v3/fixtures?date=${today}&league=140&season=2024`,
+      'https://v3.football.api-sports.io/fixtures?league=140&season=2022',
       {
         headers: {
-          'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-          'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com'
+          'x-apisports-key': process.env.API_FOOTBALL_KEY
         }
       }
     );
 
     const recommendations = response.data.response.map(match => ({
       fixtureId: match.fixture.id,
+      date: match.fixture.date,
       home: match.teams.home.name,
       away: match.teams.away.name,
       recommend: "Más de 1.5 goles"
