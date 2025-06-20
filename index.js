@@ -23,10 +23,10 @@ app.post('/api/invoke', async (req, res) => {
 
     res.json({ recommendations });
   } catch (error) {
-    console.error('Error real:', error.response?.data || error.message);
+    console.error('🔴 Error real:', error.response?.data || error.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor MCP corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Servidor MCP corriendo en puerto ${PORT}`));
