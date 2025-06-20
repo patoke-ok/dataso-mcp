@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
@@ -10,7 +9,9 @@ app.post('/api/invoke', async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
     const response = await axios.get(`https://v3.football.api-sports.io/fixtures?date=${today}&league=140&season=2024`, {
-      headers: { 'x-apisports-key': process.env.API_FOOTBALL_KEY }
+      headers: {
+        'x-apisports-key': process.env.API_FOOTBALL_KEY
+      }
     });
 
     const recommendations = response.data.response.map(match => ({
@@ -22,6 +23,7 @@ app.post('/api/invoke', async (req, res) => {
 
     res.json({ recommendations });
   } catch (error) {
+    console.error('Error real:', error.response?.data || error.message);
     res.status(500).json({ error: 'Error interno' });
   }
 });
