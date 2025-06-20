@@ -11,7 +11,7 @@ app.post('/api/invoke', async (req, res) => {
       'https://v3.football.api-sports.io/fixtures?league=140&season=2022',
       {
         headers: {
-          'x-apisports-key': '227fa20374ef08d839124351febc8bd4'
+          'x-apisports-key': 'process.env.API_FOOTBALL_KEY'
         }
       }
     );
