@@ -13,7 +13,7 @@ app.post('/api/invoke', async (req, res) => {
   try {
     const date = new Date().toISOString().split('T')[0];
 
-    const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=2023-05-20&league=39&season=2022`, {
+    const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=2025-06-20`, {
       method: 'GET',
       headers: {
         'x-apisports-key': process.env.API_FOOTBALL_KEY
