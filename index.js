@@ -20,7 +20,7 @@ app.post('/api/invoke', async (req, res) => {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'x-apisports-key': 'f3e2c541c4fafadfaa8da57bd2705e8b'
+        'x-apisports-key': 'process.env.API_FOOTBALL_KEY'
 ,
         'Content-Type': 'application/json'
       }
