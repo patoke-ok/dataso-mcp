@@ -9,10 +9,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
 
-// Endpoint MCP: /mcp/tools
+// Endpoint MCP Tools
 app.get('/mcp/tools', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.send([
+  res.json([
     {
       type: 'function',
       function: {
@@ -21,18 +20,9 @@ app.get('/mcp/tools', (req, res) => {
         parameters: {
           type: 'object',
           properties: {
-            season: {
-              type: 'string',
-              description: 'La temporada de fútbol, por ejemplo: 2023'
-            },
-            date: {
-              type: 'string',
-              description: 'Fecha del partido en formato YYYY-MM-DD'
-            },
-            league: {
-              type: 'string',
-              description: 'ID de la liga (por ejemplo: 39 para Premier League)'
-            }
+            season: { type: 'string', description: 'Temporada de fútbol, ej: 2023' },
+            date: { type: 'string', description: 'Fecha del partido en formato YYYY-MM-DD' },
+            league: { type: 'string', description: 'ID de liga, ej: 39 para Premier League' }
           },
           required: ['season', 'date', 'league']
         }
@@ -41,41 +31,34 @@ app.get('/mcp/tools', (req, res) => {
   ]);
 });
 
-// Endpoint MCP: /api/invoke
-app.post('/api/invoke', async (req, res) => {
+// Endpoint MCP Invoke
+app.post('/mcp/invoke', async (req, res) => {
+  const { season, date, league } = req.body?.tool_input || {};
+
   try {
-    const { season, date, league } = req.body;
-
-    const url = `https://v3.football.api-sports.io/fixtures?season=${season}&league=${league}&date=${date}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
+    const response = await fetch(`https://v3.football.api-sports.io/fixtures?season=${season}&date=${date}&league=${league}`, {
       headers: {
-        'x-apisports-key': process.env.API_FOOTBALL_KEY,
-        'Content-Type': 'application/json'
+        'x-apisports-key': process.env.API_FOOTBALL_KEY
       }
     });
 
     const data = await response.json();
-    const matches = data.response;
 
-    if (!matches || matches.length === 0) {
-      return res.json({ recommendations: [] });
-    }
-
-    const recommendations = matches.map(match => ({
+    const recommendations = (data.response || []).map(match => ({
       home: match.teams.home.name,
       away: match.teams.away.name,
       league: match.league.name,
       date: match.fixture.date
     }));
 
-    return res.json({ recommendations });
+    res.json({ recommendations });
 
   } catch (error) {
-    console.error('🔴 Error real:', error);
-    return res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('❌ Error en /mcp/invoke:', error);
+    res.status(500).json({ error: 'Error interno al obtener datos de partidos' });
   }
 });
 
-app.listen(PORT, () => console.log(`✅ MCP Server activo en puerto ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ MCP Server corriendo en puerto ${PORT}`);
+});
