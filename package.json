@@ -1,4 +1,3 @@
-
 {
   "name": "dataso-mcp",
   "version": "1.0.0",
@@ -9,6 +8,7 @@
   "dependencies": {
     "axios": "^1.6.7",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2"
   }
 }
