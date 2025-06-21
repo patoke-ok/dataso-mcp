@@ -2,18 +2,56 @@ import express from 'express';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 
-console.log('🔑 API Key (desde Railway):', process.env.API_FOOTBALL_KEY);
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
 
-app.post('/api/invoke', async (req, res) => {
-  try {
-    const formattedDate = '2023-08-12'; // ⚠️ O dinámica con Date si querés automatizarlo
+// 👉 Endpoint requerido por OpenAI para listar herramientas
+app.get('/tools', (req, res) => {
+  return res.json([
+    {
+      type: 'function',
+      function: {
+        name: 'get_match_recommendations',
+        description: 'Devuelve los partidos de una liga y fecha específica.',
+        parameters: {
+          type: 'object',
+          properties: {
+            season: {
+              type: 'string',
+              description: 'Temporada futbolística (por ejemplo, "2023")'
+            },
+            league: {
+              type: 'string',
+              description: 'ID de la liga (por ejemplo, "39" para Premier League)'
+            },
+            date: {
+              type: 'string',
+              description: 'Fecha en formato YYYY-MM-DD (por ejemplo, "2023-08-12")'
+            }
+          },
+          required: ['season', 'league', 'date']
+        }
+      }
+    }
+  ]);
+});
 
-    const url = `https://v3.football.api-sports.io/fixtures?season=2023&league=39&date=${formattedDate}`;
+// 👉 Endpoint para invocar la función desde OpenAI o Postman
+app.post('/invoke', async (req, res) => {
+  const { name, arguments: args } = req.body;
+
+  if (name !== 'get_match_recommendations') {
+    return res.status(400).json({ error: 'Función no soportada.' });
+  }
+
+  try {
+    const { season, league, date } = JSON.parse(args || '{}');
+
+    const url = `https://v3.football.api-sports.io/fixtures?season=${season}&league=${league}&date=${date}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -45,4 +83,6 @@ app.post('/api/invoke', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Servidor MCP corriendo en puerto ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Servidor MCP corriendo en puerto ${PORT}`);
+});
