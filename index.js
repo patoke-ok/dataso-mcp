@@ -1,40 +1,38 @@
-const express = require('express');
+import express from 'express';
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const app = express();
+const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
-const PORT = process.env.PORT || 8080;
-
-// ✅ Usa la variable de entorno, o una fija si está vacía
-const apiKey = process.env.API_FOOTBALL_KEY || '7e3c9726a6176020df02c1e4f539e375';
-
-console.log('🔑 Usando API Key:', apiKey);
-
 app.post('/api/invoke', async (req, res) => {
   try {
-    const response = await fetch('https://v3.football.api-sports.io/fixtures?league=39&season=2022', {
+    const date = new Date().toISOString().split('T')[0];
+
+    const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=${date}&league=140&season=2023`, {
       method: 'GET',
       headers: {
-        'x-apisports-key': apiKey
+        'x-apisports-key': process.env.API_FOOTBALL_KEY
       }
     });
 
     const data = await response.json();
+    console.log('🔴 Error real:', data);
 
-    // 💡 Ejemplo: recomendaciones ficticias
-    const recommendations = data.response.slice(0, 3).map(match => ({
-      fixtureId: match.fixture.id,
-      date: match.fixture.date,
-      home: match.teams.home.name,
-      away: match.teams.away.name,
-      recommend: "Más de 1.5 goles"
-    }));
+    const recommendations = data.response?.map(fixture => ({
+      fixture: fixture.fixture,
+      teams: fixture.teams,
+      league: fixture.league
+    })) || [];
 
     res.json({ recommendations });
   } catch (error) {
-    console.error('🔴 Error real:', error);
-    res.status(500).json({ error: "Error interno" });
+    console.error('🛑 Error del servidor:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
