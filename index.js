@@ -9,50 +9,45 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
 
-// 👉 Endpoint requerido por OpenAI para listar herramientas
-app.get('/tools', (req, res) => {
-  return res.json([
+// Endpoint GET para que OpenAI cargue las tools
+app.get('/mcp/tools', (req, res) => {
+  res.json([
     {
       type: 'function',
       function: {
         name: 'get_match_recommendations',
-        description: 'Devuelve los partidos de una liga y fecha específica.',
+        description: 'Devuelve recomendaciones de partidos para una fecha, temporada y liga específicas.',
         parameters: {
           type: 'object',
           properties: {
             season: {
               type: 'string',
-              description: 'Temporada futbolística (por ejemplo, "2023")'
-            },
-            league: {
-              type: 'string',
-              description: 'ID de la liga (por ejemplo, "39" para Premier League)'
+              description: 'La temporada de fútbol, por ejemplo: 2023',
             },
             date: {
               type: 'string',
-              description: 'Fecha en formato YYYY-MM-DD (por ejemplo, "2023-08-12")'
-            }
+              description: 'Fecha del partido en formato YYYY-MM-DD',
+            },
+            league: {
+              type: 'string',
+              description: 'ID de la liga (por ejemplo: 39 para Premier League)',
+            },
           },
-          required: ['season', 'league', 'date']
+          required: ['season', 'date', 'league'],
         }
       }
     }
   ]);
 });
 
-// 👉 Endpoint para invocar la función desde OpenAI o Postman
-app.post('/invoke', async (req, res) => {
-  const { name, arguments: args } = req.body;
-
-  if (name !== 'get_match_recommendations') {
-    return res.status(400).json({ error: 'Función no soportada.' });
-  }
+// Endpoint POST para ejecutar la función
+app.post('/mcp/invoke', async (req, res) => {
+  const { tool_call_id, function: func } = req.body;
 
   try {
-    const { season, league, date } = JSON.parse(args || '{}');
+    const { season, date, league } = JSON.parse(func.arguments || '{}');
 
     const url = `https://v3.football.api-sports.io/fixtures?season=${season}&league=${league}&date=${date}`;
-
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -64,10 +59,6 @@ app.post('/invoke', async (req, res) => {
     const data = await response.json();
     const matches = data.response;
 
-    if (!matches || matches.length === 0) {
-      return res.json({ recommendations: [] });
-    }
-
     const recommendations = matches.map(match => ({
       home: match.teams.home.name,
       away: match.teams.away.name,
@@ -75,14 +66,18 @@ app.post('/invoke', async (req, res) => {
       date: match.fixture.date
     }));
 
-    return res.json({ recommendations });
-
+    return res.json([
+      {
+        tool_call_id,
+        role: 'tool',
+        name: 'get_match_recommendations',
+        content: JSON.stringify({ recommendations }),
+      }
+    ]);
   } catch (error) {
     console.error('🔴 Error real:', error);
-    return res.status(500).json({ error: 'Error interno del servidor' });
+    return res.status(500).json({ error: 'Error interno en MCP Server' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Servidor MCP corriendo en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ MCP Server activo en puerto ${PORT}`));
