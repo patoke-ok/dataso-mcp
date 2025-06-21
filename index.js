@@ -63,7 +63,7 @@ app.listen(PORT, () => {
   console.log(`✅ MCP Server corriendo en puerto ${PORT}`);
 });
 
-// 🔍 Agregado para debugging de errores silenciosos
+// Manejo de errores no capturados
 process.on('uncaughtException', err => {
   console.error('❌ uncaughtException:', err);
 });
@@ -72,4 +72,9 @@ process.on('unhandledRejection', reason => {
   console.error('❌ unhandledRejection:', reason);
 });
 
-console.log('🟡 Puerto recibido por Railway:', PORT);
+// Keep-alive para evitar que Railway duerma el server
+setInterval(() => {
+  fetch("https://dataso-mcp-production.up.railway.app/mcp/tools")
+    .then(res => console.log('🔁 Keep-alive ping enviado'))
+    .catch(err => console.error('Ping error:', err));
+}, 60_000); // cada 60 segundos
