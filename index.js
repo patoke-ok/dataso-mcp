@@ -62,3 +62,14 @@ app.post('/mcp/invoke', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ MCP Server corriendo en puerto ${PORT}`);
 });
+
+// 🔍 Agregado para debugging de errores silenciosos
+process.on('uncaughtException', err => {
+  console.error('❌ uncaughtException:', err);
+});
+
+process.on('unhandledRejection', reason => {
+  console.error('❌ unhandledRejection:', reason);
+});
+
+console.log('🟡 Puerto recibido por Railway:', PORT);
