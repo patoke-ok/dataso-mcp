@@ -2,7 +2,6 @@ import express from 'express';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 
-dotenv.config();
 console.log('🔑 API Key (desde Railway):', process.env.API_FOOTBALL_KEY);
 
 const app = express();
