@@ -11,15 +11,19 @@ const PORT = process.env.PORT || 8080;
 
 app.post('/api/invoke', async (req, res) => {
   try {
-    const response = await fetch(
-      'https://v3.football.api-sports.io/fixtures?season=2023&league=39&date=2023-08-12',
-      {
-        method: 'GET',
-        headers: {
-          'x-apisports-key': process.env.API_FOOTBALL_KEY
-        }
+    // Obtener la fecha actual en formato YYYY-MM-DD
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+
+    const url = `https://v3.football.api-sports.io/fixtures?season=2023&league=39&date=${formattedDate}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-apisports-key': process.env.API_FOOTBALL_KEY,
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
     const data = await response.json();
     const matches = data.response;
