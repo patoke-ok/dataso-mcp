@@ -5,37 +5,42 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 8080;
-
 app.use(express.json());
+
+const PORT = process.env.PORT || 8080;
 
 app.post('/api/invoke', async (req, res) => {
   try {
-    const date = new Date().toISOString().split('T')[0];
-
-    const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=2025-06-20`, {
-      method: 'GET',
-      headers: {
-        'x-apisports-key': process.env.API_FOOTBALL_KEY
+    const response = await fetch(
+      'https://v3.football.api-sports.io/fixtures?season=2023&league=39&date=2023-08-12',
+      {
+        method: 'GET',
+        headers: {
+          'x-apisports-key': process.env.API_FOOTBALL_KEY
+        }
       }
-    });
+    );
 
     const data = await response.json();
-    console.log('🔴 Error real:', data);
+    const matches = data.response;
 
-    const recommendations = data.response?.map(fixture => ({
-      fixture: fixture.fixture,
-      teams: fixture.teams,
-      league: fixture.league
-    })) || [];
+    if (!matches || matches.length === 0) {
+      return res.json({ recommendations: [] });
+    }
 
-    res.json({ recommendations });
+    const recommendations = matches.map(match => ({
+      home: match.teams.home.name,
+      away: match.teams.away.name,
+      league: match.league.name,
+      date: match.fixture.date
+    }));
+
+    return res.json({ recommendations });
+
   } catch (error) {
-    console.error('🛑 Error del servidor:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('🔴 Error real:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Servidor MCP corriendo en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Servidor MCP corriendo en puerto ${PORT}`));
