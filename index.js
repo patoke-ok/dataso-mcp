@@ -9,9 +9,10 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
 
-// Endpoint GET para que OpenAI cargue las tools
+// Endpoint MCP: /mcp/tools
 app.get('/mcp/tools', (req, res) => {
-  res.json([
+  res.setHeader('Content-Type', 'application/json');
+  res.send([
     {
       type: 'function',
       function: {
@@ -22,32 +23,31 @@ app.get('/mcp/tools', (req, res) => {
           properties: {
             season: {
               type: 'string',
-              description: 'La temporada de fútbol, por ejemplo: 2023',
+              description: 'La temporada de fútbol, por ejemplo: 2023'
             },
             date: {
               type: 'string',
-              description: 'Fecha del partido en formato YYYY-MM-DD',
+              description: 'Fecha del partido en formato YYYY-MM-DD'
             },
             league: {
               type: 'string',
-              description: 'ID de la liga (por ejemplo: 39 para Premier League)',
-            },
+              description: 'ID de la liga (por ejemplo: 39 para Premier League)'
+            }
           },
-          required: ['season', 'date', 'league'],
+          required: ['season', 'date', 'league']
         }
       }
     }
   ]);
 });
 
-// Endpoint POST para ejecutar la función
-app.post('/mcp/invoke', async (req, res) => {
-  const { tool_call_id, function: func } = req.body;
-
+// Endpoint MCP: /api/invoke
+app.post('/api/invoke', async (req, res) => {
   try {
-    const { season, date, league } = JSON.parse(func.arguments || '{}');
+    const { season, date, league } = req.body;
 
     const url = `https://v3.football.api-sports.io/fixtures?season=${season}&league=${league}&date=${date}`;
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -59,6 +59,10 @@ app.post('/mcp/invoke', async (req, res) => {
     const data = await response.json();
     const matches = data.response;
 
+    if (!matches || matches.length === 0) {
+      return res.json({ recommendations: [] });
+    }
+
     const recommendations = matches.map(match => ({
       home: match.teams.home.name,
       away: match.teams.away.name,
@@ -66,17 +70,11 @@ app.post('/mcp/invoke', async (req, res) => {
       date: match.fixture.date
     }));
 
-    return res.json([
-      {
-        tool_call_id,
-        role: 'tool',
-        name: 'get_match_recommendations',
-        content: JSON.stringify({ recommendations }),
-      }
-    ]);
+    return res.json({ recommendations });
+
   } catch (error) {
     console.error('🔴 Error real:', error);
-    return res.status(500).json({ error: 'Error interno en MCP Server' });
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
